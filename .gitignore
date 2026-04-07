@@ -1,0 +1,12 @@
+data/*.csv
+data/*.parquet
+data/*.zip
+.venv/
+.ipynb_checkpoints/
+**/.ipynb_checkpoints/
+__pycache__/
+*.pyc
+.env
+*.pkl
+*.joblib
+Thumbs.db

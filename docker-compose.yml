@@ -1,0 +1,50 @@
+version: "3.9"
+
+# P1 · 실시간 금융 거래 이상탐지 대시보드
+# 실행: docker compose up -d
+# 종료: docker compose down
+# 데이터 포함 삭제: docker compose down -v
+
+services:
+
+  # ── PostgreSQL 16 ─────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: p1_postgres
+    environment:
+      POSTGRES_DB: fraud_db
+      POSTGRES_USER: fraud_user
+      POSTGRES_PASSWORD: fraud_pass
+    ports:
+      - "5432:5432"          # 로컬:컨테이너
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # sql/ 폴더의 .sql 파일을 컨테이너 시작 시 자동 실행
+      # → 01_schema.sql이 자동으로 DB에 적용됨
+      - ./sql:/docker-entrypoint-initdb.d
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fraud_user -d fraud_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Redis 7 (W2 캐싱용, 지금은 미리 세팅) ──────────
+  redis:
+    image: redis:7-alpine
+    container_name: p1_redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+
+volumes:
+  postgres_data:
+    name: p1_postgres_data
+
+# ── VS Code SQLTools 연결 정보 ──────────────────────
+# Host:     localhost
+# Port:     5432
+# Database: fraud_db
+# Username: fraud_user
+# Password: fraud_pass
